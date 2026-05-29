@@ -28,10 +28,6 @@
 
 ![Spectral Analysis Report](pic2.png)  
 *Collapsible analysis panel showing per‑band deltas and recommended adjustments.*
-
-![Live Processing & Export](pic3.png)  
-*Real‑time DSP chain, spectral comparison view and WAV export options.*
-
 ---
 
 ## 🚀 Getting Started
