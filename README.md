@@ -33,3 +33,13 @@
 ## 🚀 Getting Started
 
 No build step or install required. Just open `index.html` in a modern browser.
+
+## 🌟 Support the project
+
+If you find RACK4MASTER-AUTO useful, **help us grow** by giving a star on GitHub:
+
+[![GitHub Repo stars](https://img.shields.io/github/stars/rack4master/rack4master-auto?style=social)](https://github.com/rack4master/rack4master-auto)
+
+You can also [donate via PayPal](https://www.paypal.com/donate?business=73KKE6DVSJ8WY&no_recurring=1&currency_code=EUR) to keep improving the tool.
+
+---
