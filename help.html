@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ayuda | RACK4MASTER·AUTO</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Barlow+Condensed:wght@400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #09090e;
+  --panel: #0e0f18;
+  --panel2: #121320;
+  --border: #1c1d30;
+  --border2: #282a42;
+  --amber: #ffaa00;
+  --amber2: #ff7700;
+  --green: #00ffa3;
+  --blue: #4499ff;
+  --red: #ff3355;
+  --text: #c8ccec;
+  --label: #b2b6d2;
+  --dim: #555878;
+  --bright: #eef0ff;
+  --mono: 'Share Tech Mono', 'Courier New', monospace;
+  --sans: 'Barlow Condensed', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.6;
+  padding: 40px 20px;
+  background-image: repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255, 170, 0, .01) 40px), 
+                    repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255, 170, 0, .01) 40px);
+}
+
+.container {
+  max-width: 900px;
+  margin: auto;
+}
+
+header {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 20px;
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+.app-title {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 900;
+  font-size: 2.5rem;
+  color: var(--amber);
+  text-shadow: 0 0 20px rgba(255, 170, 0, 0.3);
+  margin-bottom: 10px;
+}
+
+.app-title span { color: var(--border2); }
+.app-title .ref { font-size: 0.5em; color: var(--bright); opacity: 0.7; vertical-align: middle; }
+
+h2 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.2rem;
+  color: var(--green);
+  text-transform: uppercase;
+  margin: 40px 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+h2::before {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  border-radius: 50%;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 25px;
+  margin-bottom: 20px;
+}
+
+.card h3 {
+  color: var(--amber);
+  font-size: 1.1rem;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+p { margin-bottom: 15px; font-size: 1.05rem; }
+
+code {
+  font-family: var(--mono);
+  background: var(--panel2);
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: var(--blue);
+}
+
+.step-list {
+  list-style: none;
+  counter-reset: step;
+}
+
+.step-list li {
+  position: relative;
+  padding-left: 45px;
+  margin-bottom: 20px;
+}
+
+.step-list li::before {
+  counter-increment: step;
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 30px;
+  height: 30px;
+  background: var(--amber);
+  color: #000;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-family: var(--mono);
+}
+
+.module-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.module-item {
+  border-left: 2px solid var(--border2);
+  padding-left: 15px;
+}
+
+.module-item strong {
+  display: block;
+  color: var(--bright);
+  margin-bottom: 5px;
+}
+
+.footer {
+  text-align: center;
+  margin-top: 60px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  color: var(--dim);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+}
+
+.btn-back {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 10px 20px;
+  border: 1px solid var(--amber);
+  color: var(--amber);
+  text-decoration: none;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: 0.3s;
+}
+
+.btn-back:hover {
+  background: var(--amber);
+  color: #000;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-family: var(--mono);
+  font-size: 0.9rem;
+}
+
+th {
+  background: var(--panel2);
+  color: var(--amber);
+  text-align: left;
+  padding: 12px;
+  border-bottom: 1px solid var(--border2);
+}
+
+td {
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.highlight { color: var(--green); }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="app-title">RACK4MASTER<span> · </span><span class="ref">AUTO</span></div>
+    <p style="color: var(--label); letter-spacing: 2px; text-transform: uppercase; font-size: 0.8rem;">Manual de Usuario & Guía de Referencia</p>
+  </header>
+
+  <section>
+    <h2>Introducción</h2>
+    <div class="card">
+      <p><strong>RACK4MASTER · AUTO</strong> es un procesador de audio inteligente diseñado para la corrección espectral y dinámica automática. Utiliza algoritmos avanzados de análisis (impulsados por el motor <code>Meyda</code>) para identificar desequilibrios en tu señal de audio y aplicar correcciones precisas en tiempo real.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Inicio Rápido</h2>
+    <div class="card">
+      <ul class="step-list">
+        <li>
+          <strong>Carga tu Audio:</strong> Arrastra un archivo <code>.wav</code>, <code>.mp3</code> o <code>.m4a</code> directamente a la zona de carga o haz clic para buscarlo en tu equipo.
+        </li>
+        <li>
+          <strong>Análisis Inteligente:</strong> Haz clic en el botón <span class="highlight">ANALYZE & AUTO-CORRECT</span>. El sistema escaneará el espectro de frecuencias, el rango dinámico y la imagen estéreo.
+        </li>
+        <li>
+          <strong>Revisión del Informe:</strong> Observa el panel de <em>Spectral & Dynamics Report</em> para entender qué decisiones tomó el algoritmo (ajustes de EQ, compresión, etc.).
+        </li>
+        <li>
+          <strong>Ajuste Fino:</strong> Si lo deseas, puedes modificar manualmente los sliders en el <em>FX Rack</em> para personalizar el resultado.
+        </li>
+        <li>
+          <strong>Exportación:</strong> Una vez satisfecho, haz clic en <code>RENDER & DOWNLOAD</code> para obtener tu archivo procesado.
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>Módulos de Procesamiento</h2>
+    <div class="card">
+      <div class="module-grid">
+        <div class="module-item">
+          <strong>7-Band EQ</strong>
+          <p>Ecualizador quirúrgico que ajusta desde los sub-graves (50Hz) hasta el aire (16kHz). El modo Auto busca una respuesta de frecuencia plana y equilibrada.</p>
+        </div>
+        <div class="module-item">
+          <strong>Dynamics + Harmonics</strong>
+          <p>Controla el rango dinámico mediante compresión. El parámetro <em>Saturation</em> añade armónicos analógicos para dar calor y presencia.</p>
+        </div>
+        <div class="module-item">
+          <strong>Filter & M/S</strong>
+          <p>Incluye un filtro pasa-altos (HPF) para limpiar ruidos de baja frecuencia y control Mid/Side para ajustar la amplitud estéreo.</p>
+        </div>
+        <div class="module-item">
+          <strong>Output Stage</strong>
+          <p>Un limitador final asegura que el audio no sature (clipping) mientras mantiene un nivel de salida competitivo.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Atajos y Funciones</h2>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Función</th>
+            <th>Descripción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="highlight">LIVE CORRECTION</span></td>
+            <td>Permite escuchar los cambios en tiempo real mientras mueves los sliders.</td>
+          </tr>
+          <tr>
+            <td><span class="highlight">PRESETS</span></td>
+            <td>Guarda tus configuraciones favoritas en archivos <code>.json</code> para usarlas en otros proyectos.</td>
+          </tr>
+          <tr>
+            <td><span class="highlight">LOOP</span></td>
+            <td>Repite una sección del audio para facilitar el ajuste de parámetros.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div style="text-align: center;">
+    <a href="index.html" class="btn-back">Volver a la App</a>
+  </div>
+
+  <div class="footer">
+    RACK4MASTER · AUTO | v1.0.0 | Intelligent Audio Engine
+  </div>
+</div>
+
+</body>
+</html>
