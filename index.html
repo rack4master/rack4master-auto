@@ -5,1093 +5,205 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>RACK4MASTER&#xB7;AUTO | Intelligent Audio Corrector</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Barlow+Condensed:wght@400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/meyda@5.6.0/dist/web/meyda.min.js"></script>
-<style>
-*{box-sizing:border-box;margin:0;padding:0;}
-:root{
-  --bg:#09090e; --panel:#0e0f18; --panel2:#121320; --border:#1c1d30; --border2:#282a42;
-  --amber:#ffaa00; --amber2:#ff7700; --green:#00ffa3; --blue:#4499ff; --red:#ff3355;
-  --text:#c8ccec; --label:#b2b6d2; --dim:#555878; --bright:#eef0ff;
-  --mono:'Share Tech Mono','Courier New',monospace; --sans:'Barlow Condensed',sans-serif;
-}
-body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:14px;padding:20px;min-height:100vh;}
-body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,170,0,.012) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,170,0,.012) 40px);}
-#app{max-width:1100px;margin:auto;position:relative;z-index:1;}
-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-bottom:14px;border-bottom:1px solid var(--border);margin-bottom:18px;}
-.app-title{font-family:'Orbitron',monospace;font-weight:900;font-size:1.72rem;letter-spacing:.06em;color:var(--amber);text-shadow:0 0 28px rgba(255,170,0,.35);}
-.app-title .sep{color:var(--border2);}.app-title .ref{font-size:.55em;color:var(--bright);opacity:.7;}
-.app-sub{font-size:.82rem;letter-spacing:.18em;color:var(--label);}
-.status-bar{display:flex;align-items:center;gap:12px;font-size:.74rem;color:var(--dim);}
-.s-led{width:7px;height:7px;border-radius:50%;background:var(--dim);transition:.25s;}
-.s-led.on{background:var(--amber);box-shadow:0 0 9px var(--amber);}
-.s-led.ok{background:var(--green);box-shadow:0 0 9px var(--green);}
-.rack{background:var(--panel);border:1px solid var(--border);border-radius:3px;margin-bottom:16px;border-top:3px solid var(--green);}
-.rack-header{display:flex;align-items:center;gap:10px;padding:9px 20px;background:var(--panel2);border-bottom:1px solid var(--border);font-family:var(--sans);font-size:.78rem;letter-spacing:.22em;text-transform:uppercase;}
-.led{width:7px;height:7px;border-radius:50%;background:#3a0010;border:1px solid #400010;}
-.led.loaded{background:var(--amber);box-shadow:0 0 5px rgba(255,170,0,.5);}
-.led.playing{background:var(--green);box-shadow:0 0 9px var(--green);}
-.track-info{margin-left:auto;font-family:var(--mono);font-size:.68rem;color:var(--dim);max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.rack-body{padding:12px 18px 14px;}
-.wave-drop{position:relative;border:1px solid var(--border);border-radius:2px 2px 0 0;background:#060609;cursor:pointer;transition:border-color .2s,box-shadow .2s;}
-.wave-drop.loaded{cursor:default;}
-/* FIX: drag-over highlight */
-.wave-drop.drag-over{border-color:var(--amber) !important;box-shadow:0 0 0 2px rgba(255,170,0,.22),inset 0 0 20px rgba(255,170,0,.06);}
-.wave-drop canvas{display:block;width:100%;height:90px;}
-.wave-hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.7rem;letter-spacing:.18em;color:var(--dim);pointer-events:none;}
-.wave-drop.loaded .wave-hint{display:none;}
-.spec-wrap{border:1px solid var(--border);border-top:none;border-radius:0 0 2px 2px;background:#040508;margin-bottom:11px;}
-.spec-wrap canvas{display:block;width:100%;height:66px;}
-.btn{font-family:var(--sans);font-size:.84rem;font-weight:700;letter-spacing:.14em;background:transparent;border:1px solid var(--border2);color:var(--text);padding:7px 16px;border-radius:2px;cursor:pointer;transition:.13s;}
-.btn:hover{border-color:var(--dim);color:var(--bright);}
-.btn-green{border-color:var(--green);color:var(--green);}
-.btn-green:hover{background:var(--green);color:#000;}
-.btn-amber{border-color:var(--amber2);color:var(--amber);}
-.btn-amber:hover{background:var(--amber);color:#000;}
-.btn-dl{border-color:var(--blue);color:var(--blue);}
-.btn-dl:hover{background:var(--blue);color:#000;}
-.btn:disabled{opacity:.3;cursor:not-allowed;}
-/* FIX: loop button active state */
-.btn-loop-active{border-color:var(--green) !important;color:var(--green) !important;background:rgba(0,255,163,.08) !important;}
-.analyze-zone{text-align:center;padding:8px 0 16px;}
-.btn-analyze{font-family:var(--sans);font-size:1.18rem;font-weight:700;letter-spacing:.22em;background:linear-gradient(135deg,var(--amber2),var(--amber));color:#000;border:none;border-radius:3px;padding:14px 48px;cursor:pointer;box-shadow:0 2px 22px rgba(255,170,0,.3);transition:.2s;}
-.btn-analyze:hover{transform:translateY(-1px);box-shadow:0 6px 28px rgba(255,170,0,.55);}
-.modules-row{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
-@media(max-width:600px){.modules-row{grid-template-columns:1fr;}}
-.module{background:#09090e;border:1px solid var(--border);border-radius:2px;padding:14px;}
-.mod-title{font-family:var(--sans);font-size:.8rem;letter-spacing:.24em;color:var(--amber);text-transform:uppercase;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:6px;}
-.slider-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
-.slider-row label{width:130px;flex-shrink:0;font-family:var(--sans);font-size:.84rem;font-weight:600;color:var(--label);text-align:right;}
-.slider-row input{flex:1;height:3px;-webkit-appearance:none;background:var(--border2);border-radius:2px;}
-.slider-row input::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--amber);cursor:pointer;}
-.sval{width:72px;text-align:right;font-family:var(--mono);font-size:.8rem;color:var(--bright);}
-.action-row{display:flex;gap:12px;padding:14px 0 6px;flex-wrap:wrap;justify-content:flex-end;}
-.live-badge{font-size:.68rem;color:var(--green);background:rgba(0,255,163,.07);border:1px solid rgba(0,255,163,.2);padding:3px 9px;border-radius:2px;}
-.atbl{width:100%;border-collapse:collapse;margin-top:10px;font-size:.75rem;}
-.atbl th{background:#0a0b12;color:var(--amber);padding:7px 10px;text-align:left;font-family:var(--sans);border-bottom:1px solid var(--border2);}
-.atbl td{padding:6px 10px;border-bottom:1px solid var(--border);font-family:var(--mono);}
-.atbl .cat-row td{background:var(--panel2);color:var(--dim);font-family:var(--sans);letter-spacing:.2em;padding:5px 10px;}
-.vp{color:var(--green);font-weight:600;}.vn{color:var(--red);}.vu{color:var(--dim);}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:flex;align-items:center;justify-content:center;}
-.modal-overlay.hidden{display:none;}
-.modal-box{background:var(--panel);border:1px solid var(--border2);border-top:3px solid var(--red);border-radius:3px;padding:28px 32px;max-width:400px;}
-.modal-title{font-family:var(--sans);font-weight:900;color:var(--red);text-transform:uppercase;margin-bottom:10px;}
-.modal-msg{font-size:.8rem;margin-bottom:24px;line-height:1.6;}
-.modal-btns{display:flex;gap:12px;justify-content:flex-end;}
-.app-footer{margin-top:22px;padding:14px 0;border-top:1px solid var(--border);display:flex;justify-content:center;gap:10px;flex-wrap:wrap;font-size:.7rem;color:var(--dim);}
-::-webkit-scrollbar{width:4px;height:4px;}
-.seek-wrap{padding:0;background:#060609;border:1px solid var(--border);border-top:none;margin-bottom:11px;}
-.seek-bar{width:100%;height:4px;-webkit-appearance:none;appearance:none;background:var(--border2);display:block;cursor:pointer;outline:none;border:none;}
-.seek-bar::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--amber);cursor:pointer;box-shadow:0 0 6px rgba(255,170,0,.5);}
-.seek-bar.out-seek::-webkit-slider-thumb{background:var(--green);box-shadow:0 0 6px rgba(0,255,163,.5);}
-.seek-time{display:flex;justify-content:space-between;padding:2px 8px 3px;font-size:.63rem;color:var(--dim);font-family:var(--mono);}
-.btn-preset{border-color:#9966ff;color:#9966ff;}
-.btn-preset:hover{background:#9966ff;color:#000;}
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div id="app">
+
+<!-- ===== HEADER ===== -->
 <header>
   <div class="app-brand">
     <div class="app-title">RACK4MASTER<span class="sep"> &#xB7; </span><span class="ref">AUTO</span></div>
-    <div class="app-sub">intelligent spectral &amp; dynamic correction</div>
+    <div class="app-sub" data-i18n="app.sub">intelligent spectral &amp; dynamic correction</div>
   </div>
-  <div class="status-bar">
-    <div class="s-led" id="sysLed"></div><span id="sysMsg">READY</span>
-    <div><span class="live-badge" id="meydaBadge" style="display:none;">&#x26A1; MEYDA</span></div>
+
+  <div class="header-right">
+    <div class="status-bar">
+      <div class="s-led" id="sysLed"></div>
+      <span id="sysMsg" data-i18n="status.ready">READY</span>
+      <span class="live-badge" id="meydaBadge" style="display:none;">&#x26A1; MEYDA</span>
+    </div>
+
+    <!-- Hamburger menu -->
+    <div class="menu-wrap">
+      <button class="hamburger" id="hamburgerBtn" aria-label="Menu">&#9776;</button>
+      <div class="ham-menu hidden" id="hamMenu">
+        <a href="help.html" class="ham-item" data-i18n="nav.help">Help</a>
+        <div class="ham-sep"></div>
+        <div class="ham-lang-label" data-i18n="nav.language">Language</div>
+        <div class="ham-lang">
+          <button class="lang-btn" data-lang="en">EN</button>
+          <button class="lang-btn" data-lang="es">ES</button>
+          <button class="lang-btn" data-lang="ca">CA</button>
+        </div>
+      </div>
+    </div>
   </div>
 </header>
 
-<!-- SINGLE TRACK LOADER -->
+<!-- ===== AUDIO TRACK LOADER ===== -->
 <div class="rack">
-  <div class="rack-header"><span class="led" id="ledTrack"></span><span>AUDIO TRACK</span><span class="track-info" id="trackInfo">NO FILE LOADED</span></div>
+  <div class="rack-header">
+    <span class="led" id="ledTrack"></span>
+    <span data-i18n="track.title">AUDIO TRACK</span>
+    <span class="track-info" id="trackInfo" data-i18n="track.nofile">NO FILE LOADED</span>
+  </div>
   <div class="rack-body">
-    <div class="wave-drop" id="dropTrack"><canvas id="waveTrack" height="90"></canvas><div class="wave-hint">&#x2B07; DROP AUDIO FILE or CLICK TO BROWSE</div></div>
-    <div class="seek-wrap"><input type="range" class="seek-bar" id="seekTrack" min="0" max="10000" value="0" step="1" disabled><div class="seek-time"><span id="seekTrackCur">0:00</span><span id="seekTrackDur">0:00</span></div></div>
+    <div class="wave-drop" id="dropTrack">
+      <canvas id="waveTrack" height="90"></canvas>
+      <div class="wave-hint" data-i18n="track.hint">&#x2B07; DROP AUDIO FILE or CLICK TO BROWSE</div>
+    </div>
+    <div class="seek-wrap">
+      <input type="range" class="seek-bar" id="seekTrack" min="0" max="10000" value="0" step="1" disabled>
+      <div class="seek-time">
+        <span id="seekTrackCur">0:00</span>
+        <span id="seekTrackDur">0:00</span>
+      </div>
+    </div>
     <div class="spec-wrap"><canvas id="specTrack" height="66"></canvas></div>
-    <div class="transport" style="display:flex;gap:8px;">
-      <button class="btn btn-amber" id="loadTrackBtn">&#x1F4C2; LOAD</button>
+    <div class="transport">
+      <button class="btn btn-amber" id="loadTrackBtn"  data-i18n="btn.load">&#x1F4C2; LOAD</button>
       <button class="btn btn-amber" id="playTrackBtn">&#x25B6; PLAY</button>
-      <button class="btn btn-gray"  id="stopTrackBtn">&#x23F9; STOP</button>
-      <button class="btn btn-gray"  id="loopTrackBtn">&#x1F504; LOOP</button>
+      <button class="btn btn-gray"  id="stopTrackBtn"  data-i18n="btn.stop">&#x23F9; STOP</button>
+      <button class="btn btn-gray"  id="loopTrackBtn"  data-i18n="btn.loop">&#x1F504; LOOP</button>
     </div>
   </div>
   <input type="file" id="fileTrack" accept="audio/*" style="display:none">
 </div>
 
-<!-- AUTO CORRECT ACTION -->
+<!-- ===== ANALYZE BUTTON ===== -->
 <div class="analyze-zone">
-  <button class="btn-analyze" id="autoCorrectBtn">&#x1F9E0; ANALYZE &amp; AUTO-CORRECT</button>
+  <button class="btn-analyze" id="autoCorrectBtn" data-i18n="btn.analyze">&#x1F9E0; ANALYZE &amp; AUTO-CORRECT</button>
 </div>
 
-<!-- ANALYSIS REPORT + CORRECTIONS DETAIL -->
+<!-- ===== ANALYSIS REPORT ===== -->
 <div class="rack" id="reportPanel" style="display:none;">
-  <div class="rack-header">&#x1F4CA; SPECTRAL &amp; DYNAMICS REPORT</div>
+  <div class="rack-header" data-i18n="report.title">&#x1F4CA; SPECTRAL &amp; DYNAMICS REPORT</div>
   <div class="rack-body"><div class="analysis-wrap" id="analysisReport"></div></div>
 </div>
 
-<!-- PROCESSED OUTPUT SECTION -->
+<!-- ===== PROCESSED OUTPUT ===== -->
 <div class="rack" id="outputSection" style="display:none;">
-  <div class="rack-header"><span class="led" id="ledOut"></span><span>PROCESSED OUTPUT</span><span class="live-badge" id="liveBadge">LIVE CORRECTION ACTIVE</span></div>
+  <div class="rack-header">
+    <span class="led" id="ledOut"></span>
+    <span data-i18n="output.title">PROCESSED OUTPUT</span>
+    <span class="live-badge" id="liveBadge" data-i18n="live.badge">LIVE CORRECTION ACTIVE</span>
+  </div>
   <div class="rack-body">
     <div class="wave-drop loaded"><canvas id="waveOut" height="90"></canvas></div>
-    <div class="seek-wrap"><input type="range" class="seek-bar out-seek" id="seekOut" min="0" max="10000" value="0" step="1" disabled><div class="seek-time"><span id="seekOutCur">0:00</span><span id="seekOutDur">0:00</span></div></div>
+    <div class="seek-wrap">
+      <input type="range" class="seek-bar out-seek" id="seekOut" min="0" max="10000" value="0" step="1" disabled>
+      <div class="seek-time">
+        <span id="seekOutCur">0:00</span>
+        <span id="seekOutDur">0:00</span>
+      </div>
+    </div>
     <div class="spec-wrap"><canvas id="specOut" height="66"></canvas></div>
-    <div class="transport"><button class="btn btn-green" id="playOutBtn">&#x25B6; PLAY</button><button class="btn btn-gray" id="stopOutBtn">&#x23F9; STOP</button></div>
-  </div>
-</div>
-
-<!-- FX RACK (sliders auto-set) -->
-<div class="rack" id="fxRack" style="display:none;">
-  <div class="rack-header">&#x2699;&#xFE0F; PROCESSING CHAIN (auto&#x2011;calculated)</div>
-  <div class="rack-body">
-    <div class="modules-row">
-      <div class="module"><div class="mod-title">7&#x2011;Band EQ</div>
-        <div class="slider-row"><label>SUB 50Hz</label><input type="range" id="eq50" min="-12" max="12" step="0.1" value="0"><span class="sval" id="eq50v">0.0</span></div>
-        <div class="slider-row"><label>BASS 100Hz</label><input type="range" id="eq100" min="-12" max="12" step="0.1" value="0"><span class="sval" id="eq100v">0.0</span></div>
-        <div class="slider-row"><label>LO-MID 300Hz</label><input type="range" id="eq300" min="-12" max="12" step="0.1" value="0"><span class="sval" id="eq300v">0.0</span></div>
-        <div class="slider-row"><label>MID 1kHz</label><input type="range" id="eq1k" min="-12" max="12" step="0.1" value="0"><span class="sval" id="eq1kv">0.0</span></div>
-        <div class="slider-row"><label>HI-MID 3kHz</label><input type="range" id="eq3k" min="-12" max="12" step="0.1" value="0"><span class="sval" id="eq3kv">0.0</span></div>
-        <div class="slider-row"><label>PRESENCE 8kHz</label><input type="range" id="eq8k" min="-12" max="12" step="0.1" value="0"><span class="sval" id="eq8kv">0.0</span></div>
-        <div class="slider-row"><label>AIR 16kHz</label><input type="range" id="eq16k" min="-12" max="12" step="0.1" value="0"><span class="sval" id="eq16kv">0.0</span></div>
+    <div class="transport">
+      <button class="btn btn-green" id="playOutBtn">&#x25B6; PLAY</button>
+      <button class="btn btn-gray"  id="stopOutBtn"  data-i18n="btn.stop">&#x23F9; STOP</button>
+      <button class="btn btn-gray"  id="loopOutBtn"  data-i18n="btn.loop">&#x1F504; LOOP</button>
+      <div class="ab-group">
+        <button class="btn-ab-sel" id="abBtnA">A</button>
+        <button class="btn-ab-sel ab-b-active" id="abBtnB">B</button>
       </div>
-      <div class="module"><div class="mod-title">Dynamics + Harmonics</div>
-        <div class="slider-row"><label>THRESHOLD</label><input type="range" id="compThr" min="-48" max="0" step="0.5" value="-24"><span class="sval" id="compThrV">-24</span></div>
-        <div class="slider-row"><label>RATIO</label><input type="range" id="compRat" min="1" max="16" step="0.5" value="3"><span class="sval" id="compRatV">3.0</span></div>
-        <div class="slider-row"><label>ATTACK (ms)</label><input type="range" id="compAtk" min="0.5" max="50" step="0.5" value="5"><span class="sval" id="compAtkV">5.0</span></div>
-        <div class="slider-row"><label>RELEASE (ms)</label><input type="range" id="compRel" min="20" max="800" step="5" value="200"><span class="sval" id="compRelV">200</span></div>
-        <div class="slider-row"><label>MAKEUP GAIN</label><input type="range" id="compMkp" min="-6" max="12" step="0.1" value="0"><span class="sval" id="compMkpV">0.0</span></div>
-        <div class="slider-row"><label>SATURATION</label><input type="range" id="satAmt" min="0" max="80" step="1" value="0"><span class="sval" id="satAmtV">0%</span></div>
-      </div>
-      <div class="module"><div class="mod-title">Filter &amp; M/S</div>
-        <div class="slider-row"><label>HPF FREQ</label><input type="range" id="hpfFreq" min="20" max="200" step="1" value="20"><span class="sval" id="hpfFreqV">20</span></div>
-        <div class="slider-row"><label>HPF RESONANCE</label><input type="range" id="hpfQ" min="0.5" max="2.5" step="0.1" value="0.7"><span class="sval" id="hpfQV">0.7</span></div>
-        <div class="slider-row"><label>MID GAIN</label><input type="range" id="midGain" min="-6" max="6" step="0.1" value="0"><span class="sval" id="midGainV">0.0</span></div>
-        <div class="slider-row"><label>SIDE GAIN</label><input type="range" id="sideGain" min="-12" max="12" step="0.1" value="0"><span class="sval" id="sideGainV">0.0</span></div>
-      </div>
-      <div class="module"><div class="mod-title">Output Stage</div>
-        <div class="slider-row"><label>LIMITER CEILING</label><input type="range" id="limCeil" min="-6" max="0" step="0.1" value="-0.3"><span class="sval" id="limCeilV">-0.3</span></div>
-        <div class="slider-row"><label>OUTPUT GAIN</label><input type="range" id="outGain" min="-12" max="12" step="0.1" value="0"><span class="sval" id="outGainV">0.0</span></div>
-      </div>
+      <span class="mon-status mon-b" id="monStatus" data-i18n="monitor.b">B: MASTERED</span>
     </div>
   </div>
 </div>
 
+<!-- ===== FX RACK ===== -->
+<div class="rack" id="fxRack" style="display:none;">
+  <div class="rack-header" data-i18n="fx.title">&#x2699;&#xFE0F; PROCESSING CHAIN (auto&#x2011;calculated)</div>
+  <div class="rack-body">
+    <div class="modules-row">
+
+      <!-- 7-Band EQ -->
+      <div class="module">
+        <div class="mod-title" data-i18n="mod.eq">7&#x2011;Band EQ</div>
+        <div class="slider-row"><label data-i18n="eq.sub">SUB 50Hz</label>      <input type="range" id="eq50"  min="-12" max="12" step="0.1" value="0"><span class="sval" id="eq50v">0.0</span></div>
+        <div class="slider-row"><label data-i18n="eq.bass">BASS 100Hz</label>   <input type="range" id="eq100" min="-12" max="12" step="0.1" value="0"><span class="sval" id="eq100v">0.0</span></div>
+        <div class="slider-row"><label data-i18n="eq.lomid">LO-MID 300Hz</label><input type="range" id="eq300" min="-12" max="12" step="0.1" value="0"><span class="sval" id="eq300v">0.0</span></div>
+        <div class="slider-row"><label data-i18n="eq.mid">MID 1kHz</label>      <input type="range" id="eq1k"  min="-12" max="12" step="0.1" value="0"><span class="sval" id="eq1kv">0.0</span></div>
+        <div class="slider-row"><label data-i18n="eq.himid">HI-MID 3kHz</label> <input type="range" id="eq3k"  min="-12" max="12" step="0.1" value="0"><span class="sval" id="eq3kv">0.0</span></div>
+        <div class="slider-row"><label data-i18n="eq.presence">PRESENCE 8kHz</label><input type="range" id="eq8k"  min="-12" max="12" step="0.1" value="0"><span class="sval" id="eq8kv">0.0</span></div>
+        <div class="slider-row"><label data-i18n="eq.air">AIR 16kHz</label>    <input type="range" id="eq16k" min="-12" max="12" step="0.1" value="0"><span class="sval" id="eq16kv">0.0</span></div>
+      </div>
+
+      <!-- Dynamics + Harmonics -->
+      <div class="module">
+        <div class="mod-title" data-i18n="mod.dyn">Dynamics + Harmonics</div>
+        <div class="slider-row"><label data-i18n="dyn.thr">THRESHOLD</label>    <input type="range" id="compThr" min="-48" max="0"   step="0.5" value="-24"><span class="sval" id="compThrV">-24</span></div>
+        <div class="slider-row"><label data-i18n="dyn.rat">RATIO</label>         <input type="range" id="compRat" min="1"   max="16"  step="0.5" value="3"><span class="sval" id="compRatV">3.0</span></div>
+        <div class="slider-row"><label data-i18n="dyn.atk">ATTACK (ms)</label>  <input type="range" id="compAtk" min="0.5" max="50"  step="0.5" value="5"><span class="sval" id="compAtkV">5.0</span></div>
+        <div class="slider-row"><label data-i18n="dyn.rel">RELEASE (ms)</label> <input type="range" id="compRel" min="20"  max="800" step="5"   value="200"><span class="sval" id="compRelV">200</span></div>
+        <div class="slider-row"><label data-i18n="dyn.mkp">MAKEUP GAIN</label>  <input type="range" id="compMkp" min="-6"  max="12"  step="0.1" value="0"><span class="sval" id="compMkpV">0.0</span></div>
+        <div class="slider-row"><label data-i18n="dyn.sat">SATURATION</label>   <input type="range" id="satAmt"  min="0"   max="80"  step="1"   value="0"><span class="sval" id="satAmtV">0%</span></div>
+      </div>
+
+      <!-- Filter & M/S -->
+      <div class="module">
+        <div class="mod-title" data-i18n="mod.filter">Filter &amp; M/S</div>
+        <div class="slider-row"><label data-i18n="flt.hpf">HPF FREQ</label>         <input type="range" id="hpfFreq"  min="20"  max="200" step="1"   value="20"><span class="sval" id="hpfFreqV">20</span></div>
+        <div class="slider-row"><label data-i18n="flt.hpfq">HPF RESONANCE</label>   <input type="range" id="hpfQ"     min="0.5" max="2.5" step="0.1" value="0.7"><span class="sval" id="hpfQV">0.7</span></div>
+        <div class="slider-row"><label data-i18n="flt.mid">MID GAIN</label>         <input type="range" id="midGain"  min="-6"  max="6"   step="0.1" value="0"><span class="sval" id="midGainV">0.0</span></div>
+        <div class="slider-row"><label data-i18n="flt.side">SIDE GAIN</label>       <input type="range" id="sideGain" min="-12" max="12"  step="0.1" value="0"><span class="sval" id="sideGainV">0.0</span></div>
+      </div>
+
+      <!-- Output Stage -->
+      <div class="module">
+        <div class="mod-title" data-i18n="mod.out">Output Stage</div>
+        <div class="slider-row"><label data-i18n="out.lim">LIMITER CEILING</label>  <input type="range" id="limCeil" min="-6"  max="0"  step="0.1" value="-0.3"><span class="sval" id="limCeilV">-0.3</span></div>
+        <div class="slider-row"><label data-i18n="out.gain">OUTPUT GAIN</label>     <input type="range" id="outGain" min="-12" max="12" step="0.1" value="0"><span class="sval" id="outGainV">0.0</span></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ===== ACTION ROW ===== -->
 <div class="action-row" id="exportRow" style="display:none;">
-  <button class="btn btn-preset" id="savePresetBtn">&#x1F4BE; SAVE PRESET</button>
-  <button class="btn btn-preset" id="loadPresetBtn">&#x1F4C2; LOAD PRESET</button>
+  <button class="btn btn-preset" id="savePresetBtn"  data-i18n="btn.savepreset">&#x1F4BE; SAVE PRESET</button>
+  <button class="btn btn-preset" id="loadPresetBtn"  data-i18n="btn.loadpreset">&#x1F4C2; LOAD PRESET</button>
   <input type="file" id="presetFileInput" accept=".json" style="display:none">
-  <button class="btn btn-dl" id="exportBtn">&#x2B07; EXPORT WAV (corrected)</button>
-  <button class="btn btn-gray" id="resetAllBtn">&#x27F3; FULL RESET</button>
-</div>
-<footer class="app-footer">&#x26A1; RACK4MASTER&#xB7;AUTO &#x2014; AI&#x2011;inspired heuristics &#x2022; Meyda spectral analysis &#x2022; All processing in&#x2011;browser &#x2022; No data leaves your machine</footer>
+  <button class="btn btn-dl"     id="exportBtn"      data-i18n="btn.export">&#x2B07; EXPORT WAV (corrected)</button>
+  <button class="btn btn-gray"   id="resetAllBtn"    data-i18n="btn.resetall">&#x27F3; FULL RESET</button>
 </div>
 
-<!-- CONFIRM RESET MODAL -->
-<div class="modal-overlay hidden" id="resetModal"><div class="modal-box"><div class="modal-title">&#x26A0;&#xFE0F; FULL RESET</div><div class="modal-msg">All loaded audio and settings will be cleared.<br>This action cannot be undone.</div><div class="modal-btns"><button class="btn btn-gray" id="resetCancel">CANCEL</button><button class="btn btn-red" id="resetConfirm">RESET</button></div></div></div>
+<!-- ===== FOOTER ===== -->
+<footer class="app-footer">
+  <span data-i18n="footer.text">&#x26A1; RACK4MASTER&#xB7;AUTO &mdash; AI&#x2011;inspired heuristics &bull; Meyda spectral analysis &bull; All processing in&#x2011;browser &bull; No data leaves your machine</span>
+  <form action="https://www.paypal.com/donate" method="post" target="_blank" style="display:inline-block;margin:0;vertical-align:middle;">
+    <input type="hidden" name="business"     value="73KKE6DVSJ8WY">
+    <input type="hidden" name="no_recurring" value="1">
+    <input type="hidden" name="currency_code" value="EUR">
+    <input type="image"
+           src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif"
+           border="0" name="submit"
+           title="PayPal - The safer, easier way to pay online!"
+           alt="Donate with PayPal button"
+           style="vertical-align:middle;">
+  </form>
+</footer>
 
-<script>
-// ======== DOM REFS ========
-const dropTrack = document.getElementById('dropTrack');
-const fileTrack = document.getElementById('fileTrack');
-const waveCanvas = document.getElementById('waveTrack');
-const specCanvas = document.getElementById('specTrack');
-const waveOut = document.getElementById('waveOut');
-const specOut = document.getElementById('specOut');
-const ledTrack = document.getElementById('ledTrack');
-const ledOut = document.getElementById('ledOut');
-const trackInfo = document.getElementById('trackInfo');
-const sysLed = document.getElementById('sysLed');
-const sysMsg = document.getElementById('sysMsg');
-const autoBtn = document.getElementById('autoCorrectBtn');
-const reportPanel = document.getElementById('reportPanel');
-const outputSection = document.getElementById('outputSection');
-const fxRack = document.getElementById('fxRack');
-const exportRow = document.getElementById('exportRow');
-const playTrackBtn = document.getElementById('playTrackBtn');
-const stopTrackBtn = document.getElementById('stopTrackBtn');
-const loopTrackBtn = document.getElementById('loopTrackBtn');
-const playOutBtn = document.getElementById('playOutBtn');
-const stopOutBtn = document.getElementById('stopOutBtn');
-const exportBtn = document.getElementById('exportBtn');
-const resetBtn = document.getElementById('resetAllBtn');
-const meydaBadge = document.getElementById('meydaBadge');
-if(window.Meyda) meydaBadge.style.display = 'inline-block';
+</div><!-- #app -->
 
-// ======== STATE ========
-let audioCtx = null;
-let originalBuffer = null;
-let currentTrackName = 'RACK4MASTER Preset';
-let trackPeaks = null;
-let trackSpec = null;
-let recommendedParams = {
-  eq: [0,0,0,0,0,0,0], compThr:-18, compRat:2, compAtk:15, compRel:200, makeUp:2,
-  hpfFreq:20, hpfQ:0.7, sat:0, midGain:0, sideGain:0, lim:-0.3, outGain:0
-};
+<!-- ===== RESET MODAL ===== -->
+<div class="modal-overlay hidden" id="resetModal">
+  <div class="modal-box">
+    <div class="modal-title" data-i18n="modal.title">&#x26A0;&#xFE0F; FULL RESET</div>
+    <div class="modal-msg"   data-i18n="modal.msg">All loaded audio and settings will be cleared.
+This action cannot be undone.</div>
+    <div class="modal-btns">
+      <button class="btn btn-gray" id="resetCancel"  data-i18n="modal.cancel">CANCEL</button>
+      <button class="btn btn-red"  id="resetConfirm" data-i18n="modal.confirm">RESET</button>
+    </div>
+  </div>
+</div>
 
-// FIX: trackPlayer with looping flag + generation counter to prevent stale onended
-let trackPlayer = { src:null, playing:false, offset:0, startTime:0, looping:false };
-let trackGeneration = 0;
-
-let liveNodes = { active:false, source:null, hpf:null, eqNodes:[], shaper:null, comp:null, mkp:null, midG:null, sideG:null, spl:null, mrg:null, lim:null, outG:null, analyser:null, fadeGain:null };
-let livePlaying = false, liveOffset=0, liveStart=0, rafId=null;
-let liveGeneration = 0;
-
-function initCtx() {
-  if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-  if(audioCtx.state === 'suspended') audioCtx.resume();
-}
-
-// ======== CONSTANTS ========
-const ISO30 = [25,31.5,40,50,63,80,100,125,160,200,250,315,400,500,630,800,1000,1250,1600,2000,2500,3150,4000,5000,6300,8000,10000,12500,16000,20000];
-// EQ_GROUPS maps EQ bands [50,100,300,1k,3k,8k,16k] to ISO30 indices
-const EQ_GROUPS = [[0,1,2,3],[4,5,6,7],[8,9,10,11],[14,15,16,17],[18,19,20,21],[22,23,24,25],[26,27,28,29]];
-const EQ_FREQS = [50,100,300,1000,3000,8000,16000];
-const EQ_QS = [0.7,1.0,1.0,1.0,1.0,1.0,0.7];
-const TARGET_LUFS = -14.0;
-const TARGET_CREST = 10.0;
-const TARGET_STEREO_WIDTH = 0.38;
-
-function clamp(v,lo,hi){ return Math.min(hi,Math.max(lo,v)); }
-
-// ======== ANALYSIS ========
-function computeFullAnalysis(buf) {
-  if(!buf) return null;
-  const sr = buf.sampleRate, len = Math.min(buf.length, sr*30);
-  let mono = new Float32Array(len);
-  for(let ch=0; ch<buf.numberOfChannels; ch++){
-    let d=buf.getChannelData(ch);
-    for(let i=0;i<len;i++) mono[i] += d[i]/buf.numberOfChannels;
-  }
-  let rms=0;
-  for(let i=0;i<mono.length;i++) rms+=mono[i]*mono[i];
-  rms = 20*Math.log10(Math.sqrt(rms/mono.length)+1e-9);
-  let peak=0;
-  for(let i=0;i<mono.length;i++) peak=Math.max(peak,Math.abs(mono[i]));
-  let peakdB = 20*Math.log10(peak+1e-9);
-  let crest = peakdB - rms;
-  let stereoW = 0.5;
-  if(buf.numberOfChannels>=2){
-    let L=buf.getChannelData(0), R=buf.getChannelData(1), mp=0, sp=0;
-    for(let i=0;i<len;i++){
-      let m=(L[i]+R[i])*0.5, s=(L[i]-R[i])*0.5;
-      mp+=m*m; sp+=s*s;
-    }
-    stereoW = Math.sqrt(sp/(mp+1e-12));
-  }
-  let iso = new Array(30).fill(-90);
-  let flatness=0.5, centroid=1000;
-  if(window.Meyda){
-    Meyda.sampleRate = sr; Meyda.bufferSize = 2048;
-    let frames=0, isoSum=new Array(30).fill(0), flatSum=0, centSum=0;
-    for(let i=0; i+2048<=mono.length; i+=1024){
-      let frame = mono.slice(i,i+2048);
-      let feat = Meyda.extract(['powerSpectrum','spectralFlatness','spectralCentroid'], frame);
-      if(feat && feat.powerSpectrum){
-        let ps = feat.powerSpectrum, binHz = sr/2048;
-        for(let b=0;b<30;b++){
-          let fc=ISO30[b], fLo=fc/Math.pow(2,1/6), fHi=fc*Math.pow(2,1/6);
-          let idxL=Math.max(0,Math.floor(fLo/binHz)), idxR=Math.min(ps.length-1,Math.ceil(fHi/binHz));
-          let sum=0, cnt=0;
-          for(let k=idxL;k<=idxR;k++){ sum+=ps[k]; cnt++; }
-          isoSum[b] += (cnt>0 ? 10*Math.log10(sum/cnt+1e-24) : -120);
-        }
-        if(feat.spectralFlatness!==undefined) flatSum += feat.spectralFlatness;
-        if(feat.spectralCentroid!==undefined) centSum += feat.spectralCentroid*binHz;
-        frames++;
-      }
-    }
-    if(frames){
-      for(let b=0;b<30;b++) iso[b] = isoSum[b]/frames;
-      flatness = flatSum/frames;
-      centroid = centSum/frames;
-    }
-  }
-  return { rms, peakdB, crest, stereoWidth:stereoW, iso, flatness, centroid, sr };
-}
-
-// ======== HEURISTICS - COMPLETE REWRITE ========
-// FIX: previous code computed absolute target vs absolute measured ISO values,
-// producing deltas of 30-50dB that always clamped to max +/-12dB.
-// New approach: normalize both measured and target to relative shape vs 1kHz anchor,
-// then apply gentle corrections scaled to realistic mastering range.
-function autoCorrectParams(analysis){
-  if(!analysis) return recommendedParams;
-  let iso = analysis.iso;
-
-  // --- EQ ---
-  // Compute average level for each of the 7 EQ bands from ISO30 measurements
-  let bandLevels = EQ_GROUPS.map(function(idxs){
-    let s=0; idxs.forEach(function(i){ s+=iso[i]; }); return s/idxs.length;
-  });
-
-  // Check if Meyda gave us real data (not all at the -90 default)
-  let hasData = bandLevels.some(function(v){ return v > -85; });
-
-  // Normalize relative to the 1kHz band (index 3) as perceptual anchor
-  // If no data, anchor = -90 so all normLevels = 0
-  let anchor = bandLevels[3];
-  let normLevels = bandLevels.map(function(v){ return v - anchor; });
-
-  // Target spectral shape relative to 1kHz for a well-balanced master.
-  // Based on academic analysis of commercial masters (Pestana et al.):
-  // deliberately errs toward warmth — excessive brightness is harder to fix
-  // and more fatiguing than excess body.
-  //   [50Hz, 100Hz, 300Hz, 1kHz, 3kHz, 8kHz, 16kHz]
-  let tgt = [4.0, 7.0, 2.5, 0.0, -2.5, -9.5, -22.0];
-
-  // Scale factor: gentle — mastering EQ works in small increments
-  let scl = hasData ? 0.30 : 0.10;
-
-  let eqGains = tgt.map(function(t, g){
-    return clamp((t - normLevels[g]) * scl, -9.0, 9.0);
-  });
-
-  // ASYMMETRIC PROTECTION — never boost high frequencies.
-  // Body and warmth can be added; air and brilliance must never be forced.
-  // If the track is already dark above 3kHz, leave it alone.
-  eqGains[4] = Math.min(eqGains[4],  1.0); // 3kHz:  cap boost at +1 dB (presence)
-  eqGains[5] = Math.min(eqGains[5],  0.0); // 8kHz:  only cut, never boost
-  eqGains[6] = Math.min(eqGains[6],  0.0); // 16kHz: only cut, never boost
-
-  // --- DYNAMICS (mastering-appropriate values) ---
-  // Use crest factor to gauge dynamic range; avoid over-compression
-  let crest = analysis.crest;
-  // Threshold: gentler for dynamic material, but never below -28dB
-  let thr = clamp(-16.0 - crest * 0.32, -28.0, -8.0);
-  // Ratio: mastering range 1.5:1 to 3.5:1 max
-  let ratio = clamp(1.8 + Math.max(0, crest - 10.0) * 0.12, 1.5, 3.5);
-  // Attack: slow enough to preserve transients (10-30ms)
-  let attack = clamp(12.0 + crest * 0.6, 8.0, 32.0);
-  // Release: musical auto-release range
-  let release = clamp(200.0 + crest * 7.0, 80.0, 420.0);
-  // Makeup: compensate for typical gain reduction, modest value
-  let makeup = clamp(Math.abs(thr) * (ratio - 1.0) / ratio * 0.26, 0.0, 5.0);
-
-  // --- HPF ---
-  // Only apply HPF for genuine sub-bass rumble, not for normal bass content
-  let subEng  = iso.slice(0,4).reduce(function(a,b){ return a+b; },0) / 4;
-  let bassEng = iso.slice(4,8).reduce(function(a,b){ return a+b; },0) / 4;
-  let hpfFreq = (hasData && subEng > bassEng + 8.0)
-    ? clamp(28 + (subEng - bassEng - 8.0) * 2.0, 24, 80)
-    : 20;
-
-  // --- SATURATION ---
-  // Apply only for very flat / lifeless spectra; keep modest
-  let sat = clamp((0.40 - analysis.flatness) * 50.0, 0.0, 22.0);
-
-  // --- STEREO WIDTH ---
-  let wDelta = analysis.stereoWidth - TARGET_STEREO_WIDTH;
-  let sideGain = clamp(-wDelta * 9.0, -5.0, 5.0);
-  let midGain  = clamp(wDelta * 0.8, -1.5, 1.5);
-
-  // --- OUTPUT GAIN ---
-  // Approximate LUFS from RMS; push gently toward -14 LUFS
-  let lufsEst = analysis.rms + 14.0;
-  let loudDelta = TARGET_LUFS - lufsEst;
-  let outGain = clamp(loudDelta * 0.60 + makeup * 0.35, -5.0, 8.0);
-  // Limiter ceiling: fixed at -0.3 dBFS (broadcast safe)
-  let lim = -0.3;
-
-  return {
-    eq: eqGains, compThr: thr, compRat: ratio, compAtk: attack, compRel: release,
-    makeUp: makeup, hpfFreq: hpfFreq, hpfQ: 0.71, sat: sat,
-    midGain: midGain, sideGain: sideGain, lim: lim, outGain: outGain
-  };
-}
-
-// ======== WAVEFORM & SPECTRUM DRAW ========
-function computePeaks(buf, w){
-  let ch=buf.getChannelData(0), len=buf.length, maxv=new Float32Array(w), minv=new Float32Array(w);
-  for(let x=0;x<w;x++){
-    let s=Math.floor(x/w*len), e=Math.min(Math.floor((x+1)/w*len),len);
-    let hi=-1, lo=1;
-    for(let i=s;i<e;i++){ hi=Math.max(hi,ch[i]); lo=Math.min(lo,ch[i]); }
-    maxv[x]=hi; minv[x]=lo;
-  }
-  return {max:maxv, min:minv};
-}
-function drawWave(canvas, peaks, pos, bright, dim){
-  let w=canvas.offsetWidth||800, h=canvas.height; canvas.width=w;
-  let ctx=canvas.getContext('2d'); ctx.fillStyle='#060609'; ctx.fillRect(0,0,w,h);
-  if(peaks){
-    let mid=h*0.5, px=Math.round((pos||0)*w);
-    for(let x=0;x<w;x++){
-      let hi=peaks.max[x]*mid*0.88, lo=-peaks.min[x]*mid*0.88;
-      ctx.fillStyle=(x<=px)?bright:dim;
-      if(hi>0.5) ctx.fillRect(x,mid-hi,1,hi);
-      if(lo>0.5) ctx.fillRect(x,mid,1,lo);
-    }
-  }
-}
-function drawSpecFromData(canvas, specData, stroke, fill){
-  if(!specData) return;
-  let w=canvas.offsetWidth||800, h=canvas.height; canvas.width=w;
-  let ctx=canvas.getContext('2d'); ctx.fillStyle='#040508'; ctx.fillRect(0,0,w,h);
-  let bin=specData.binHz, mag=specData.mag;
-  let path=[];
-  for(let px=0;px<w;px++){
-    let fLo=20*Math.pow(20000/20, px/w), fHi=20*Math.pow(20000/20, (px+1)/w);
-    let bLo=Math.max(1,Math.floor(fLo/bin)), bHi=Math.min(mag.length-1,Math.ceil(fHi/bin));
-    let sum=0, cnt=0;
-    for(let b=bLo;b<=bHi;b++){ sum+=mag[b]; cnt++; }
-    let db=20*Math.log10((cnt?sum/cnt:0)+1e-9);
-    let y=((Math.max(-80,Math.min(0,db))+80)/80)*h;
-    path.push(h-y);
-  }
-  ctx.beginPath(); ctx.moveTo(0,h);
-  for(let i=0;i<path.length;i++) ctx.lineTo(i,path[i]);
-  ctx.lineTo(w-1,h); ctx.fillStyle=fill; ctx.fill();
-  ctx.beginPath(); ctx.moveTo(0,path[0]);
-  for(let i=1;i<path.length;i++) ctx.lineTo(i,path[i]);
-  ctx.strokeStyle=stroke; ctx.lineWidth=1.3; ctx.stroke();
-}
-function redrawAll(){
-  if(originalBuffer && trackPeaks) drawWave(waveCanvas, trackPeaks, 0, '#ffaa00','#2a1800');
-  if(trackSpec) drawSpecFromData(specCanvas, trackSpec, '#ffaa00','rgba(255,170,0,.15)');
-}
-
-// ======== LIVE DSP CHAIN ========
-function buildLiveChain(){
-  if(!audioCtx||!originalBuffer) return;
-  if(liveNodes.active) destroyLiveChain();
-  let ctx=audioCtx, n=liveNodes, ch=originalBuffer.numberOfChannels;
-  n.hpf = ctx.createBiquadFilter(); n.hpf.type='highpass';
-  n.eqNodes = EQ_FREQS.map(function(f,i){
-    let fn=ctx.createBiquadFilter(); fn.type='peaking'; fn.frequency.value=f; fn.Q.value=EQ_QS[i]; return fn;
-  });
-  for(let i=0;i<6;i++) n.eqNodes[i].connect(n.eqNodes[i+1]);
-  n.shaper = ctx.createWaveShaper(); n.shaper.oversample='2x';
-  n.comp = ctx.createDynamicsCompressor(); n.comp.knee.value=8;
-  n.mkp = ctx.createGain();
-  if(ch===2){
-    n.spl=ctx.createChannelSplitter(2); n.mrg=ctx.createChannelMerger(2);
-    n.midG=ctx.createGain(); n.sideG=ctx.createGain();
-    n.inv=ctx.createGain(); n.inv.gain.value=-1;
-    n.lM=ctx.createGain(); n.rM=ctx.createGain();
-    n.sI=ctx.createGain(); n.sI.gain.value=-1;
-  }
-  n.lim = ctx.createDynamicsCompressor(); n.lim.ratio.value=20; n.lim.attack.value=0.001; n.lim.knee.value=0;
-  n.outG = ctx.createGain();
-  n.analyser = ctx.createAnalyser(); n.analyser.fftSize=2048; n.analyser.smoothingTimeConstant=0.8;
-  n.fadeGain = ctx.createGain(); n.fadeGain.gain.value=0;
-  n.hpf.connect(n.eqNodes[0]);
-  n.eqNodes[6].connect(n.shaper); n.shaper.connect(n.comp); n.comp.connect(n.mkp);
-  if(ch===2){
-    n.mkp.connect(n.spl);
-    n.spl.connect(n.midG,0); n.spl.connect(n.midG,1);
-    n.spl.connect(n.sideG,0); n.spl.connect(n.inv,1); n.inv.connect(n.sideG);
-    n.midG.connect(n.lM); n.sideG.connect(n.lM);
-    n.midG.connect(n.rM); n.sideG.connect(n.sI); n.sI.connect(n.rM);
-    n.lM.connect(n.mrg,0,0); n.rM.connect(n.mrg,0,1); n.mrg.connect(n.lim);
-  } else {
-    n.mkp.connect(n.lim);
-  }
-  n.lim.connect(n.outG); n.outG.connect(n.analyser);
-  n.analyser.connect(n.fadeGain); n.fadeGain.connect(ctx.destination);
-  n.active=true;
-  updateLiveParams();
-}
-function updateLiveParams(){
-  if(!liveNodes.active) return;
-  let n=liveNodes, p=recommendedParams;
-  n.hpf.frequency.value = p.hpfFreq; n.hpf.Q.value = p.hpfQ;
-  for(let i=0;i<7;i++) if(n.eqNodes[i]) n.eqNodes[i].gain.value = p.eq[i];
-  let amt=p.sat/100, k=amt*80, sz=512, curve=new Float32Array(sz);
-  for(let i=0;i<sz;i++){
-    let x=(i*2)/sz-1;
-    curve[i] = k<0.5 ? x : (1+k/100)*x/(1+(k/100)*Math.abs(x));
-  }
-  let maxV=0; for(let v of curve) maxV=Math.max(maxV,Math.abs(v));
-  if(maxV>0) for(let i=0;i<sz;i++) curve[i]/=maxV;
-  n.shaper.curve = curve;
-  n.comp.threshold.value = p.compThr; n.comp.ratio.value = p.compRat;
-  n.comp.attack.value = p.compAtk/1000; n.comp.release.value = p.compRel/1000;
-  n.mkp.gain.value = Math.pow(10, p.makeUp/20);
-  if(originalBuffer && originalBuffer.numberOfChannels===2 && n.midG && n.sideG){
-    let mLin=Math.pow(10, p.midGain/20), sLin=Math.pow(10, p.sideGain/20);
-    n.midG.gain.value = 0.5*mLin; n.sideG.gain.value = 0.5*sLin;
-  }
-  n.lim.threshold.value = p.lim; n.outG.gain.value = Math.pow(10, p.outGain/20);
-}
-function destroyLiveChain(){
-  let n=liveNodes;
-  if(n.source) try{ n.source.stop(); }catch(e){}
-  ['hpf','comp','mkp','shaper','spl','mrg','midG','sideG','inv','lM','rM','sI','lim','outG','analyser','fadeGain'].forEach(function(k){
-    if(n[k]){ try{n[k].disconnect();}catch(e){} n[k]=null; }
-  });
-  if(n.eqNodes){ n.eqNodes.forEach(function(f){ try{f.disconnect();}catch(e){}; }); n.eqNodes=[]; }
-  n.active=false;
-}
-function startLive(offset){
-  if(!originalBuffer||!liveNodes.active) return;
-  initCtx();
-  if(livePlaying) stopLive();
-  liveGeneration++;
-  var myLiveGen = liveGeneration;
-  var src=audioCtx.createBufferSource();
-  src.buffer=originalBuffer;
-  src.connect(liveNodes.hpf);
-  let dur=originalBuffer.duration;
-  offset=Math.min(offset, dur-0.02);
-  liveNodes.fadeGain.gain.cancelScheduledValues(audioCtx.currentTime);
-  liveNodes.fadeGain.gain.setValueAtTime(1, audioCtx.currentTime);
-  src.start(0,offset);
-  liveNodes.source=src; liveStart=audioCtx.currentTime-offset;
-  livePlaying=true; liveOffset=offset;
-  playOutBtn.textContent='\u23F8 PAUSE';
-  // FIX: use ledOut not ledTrack
-  ledOut.className='led playing';
-  function update(){
-    if(!livePlaying) return;
-    let prog=(audioCtx.currentTime-liveStart)/dur;
-    if(prog>=1){
-      stopLive(); liveOffset=0; seekOut.value=0; seekOutCurEl.textContent=fmtTime(0);
-      drawWave(waveOut, trackPeaks, 0, '#00ffa3','#003320');
-      return;
-    }
-    drawWave(waveOut, trackPeaks, prog, '#00ffa3','#003320');
-    seekOut.value=Math.round(prog*10000);
-    seekOutCurEl.textContent=fmtTime(prog*dur);
-    if(liveNodes.analyser){
-      let w=specOut.offsetWidth||800, h=specOut.height, fbc=liveNodes.analyser.frequencyBinCount;
-      let data=new Float32Array(fbc); liveNodes.analyser.getFloatFrequencyData(data);
-      let path=[];
-      for(let px=0;px<w;px++){
-        let fLo=20*Math.pow(20000/20, px/w), fHi=20*Math.pow(20000/20, (px+1)/w);
-        let binHz=audioCtx.sampleRate/2048, bLo=Math.max(1,Math.floor(fLo/binHz)), bHi=Math.min(fbc-1,Math.ceil(fHi/binHz));
-        let sum=0, cnt=0;
-        for(let b=bLo;b<=bHi;b++) if(data[b]>-140){ sum+=data[b]; cnt++; }
-        let db=sum/cnt;
-        let y=((Math.max(-80,Math.min(0,db))+80)/80)*h;
-        path.push(h-y);
-      }
-      let sctx=specOut.getContext('2d'); sctx.fillStyle='#040508'; sctx.fillRect(0,0,w,h);
-      sctx.beginPath(); sctx.moveTo(0,h);
-      for(let i=0;i<path.length;i++) sctx.lineTo(i,path[i]);
-      sctx.lineTo(w-1,h); sctx.fillStyle='rgba(0,255,163,.12)'; sctx.fill();
-      sctx.beginPath();
-      for(let i=0;i<path.length;i++) sctx.lineTo(i,path[i]);
-      sctx.strokeStyle='#00ffa3'; sctx.stroke();
-    }
-    rafId=requestAnimationFrame(update);
-  }
-  update();
-  src.onended=function(){ if(liveGeneration !== myLiveGen) return; if(livePlaying) stopLive(); };
-}
-function stopLive(){
-  if(liveNodes.fadeGain&&audioCtx){
-    let now=audioCtx.currentTime;
-    liveNodes.fadeGain.gain.cancelScheduledValues(now);
-    liveNodes.fadeGain.gain.setValueAtTime(liveNodes.fadeGain.gain.value,now);
-    liveNodes.fadeGain.gain.linearRampToValueAtTime(0,now+0.012);
-  }
-  if(liveNodes.source){ try{ liveNodes.source.stop(); }catch(e){} liveNodes.source=null; }
-  if(rafId){ cancelAnimationFrame(rafId); rafId=null; }
-  livePlaying=false;
-  playOutBtn.textContent='\u25B6 PLAY';
-  // FIX: use ledOut not ledTrack
-  ledOut.className='led loaded';
-}
-
-// ======== AUTO CORRECTION ========
-async function autoCorrect(){
-  if(!originalBuffer){ sysMsg.textContent='NO AUDIO'; return; }
-  sysMsg.textContent='ANALYZING ...'; sysLed.className='s-led on'; autoBtn.disabled=true;
-  setTimeout(function(){
-    let analysis = computeFullAnalysis(originalBuffer);
-    let params = autoCorrectParams(analysis);
-    recommendedParams = {
-      eq:params.eq, compThr:params.compThr, compRat:params.compRat,
-      compAtk:params.compAtk, compRel:params.compRel, makeUp:params.makeUp,
-      hpfFreq:params.hpfFreq, hpfQ:params.hpfQ, sat:params.sat,
-      midGain:params.midGain, sideGain:params.sideGain, lim:params.lim, outGain:params.outGain
-    };
-    // apply to sliders
-    const eqIds=['eq50','eq100','eq300','eq1k','eq3k','eq8k','eq16k'];
-    eqIds.forEach(function(id,i){ let el=document.getElementById(id); if(el) el.value=params.eq[i]; });
-    document.getElementById('compThr').value=params.compThr;
-    document.getElementById('compRat').value=params.compRat;
-    document.getElementById('compAtk').value=params.compAtk;
-    document.getElementById('compRel').value=params.compRel;
-    document.getElementById('compMkp').value=params.makeUp;
-    document.getElementById('satAmt').value=params.sat;
-    document.getElementById('hpfFreq').value=params.hpfFreq;
-    document.getElementById('hpfQ').value=params.hpfQ;
-    document.getElementById('midGain').value=params.midGain;
-    document.getElementById('sideGain').value=params.sideGain;
-    document.getElementById('limCeil').value=params.lim;
-    document.getElementById('outGain').value=params.outGain;
-    document.querySelectorAll('input[type=range]').forEach(function(s){ s.dispatchEvent(new Event('input')); });
-    buildLiveChain();
-    let html='<table class="atbl"><tr class="cat-row"><td colspan="2">&#x1F4C8; AUTO CORRECTION DECISIONS</td></tr>'
-      +'<tr><td>&#x1F3DB;&#xFE0F; EQ (dB)</td><td>'+params.eq.map(function(v){ return v.toFixed(1); }).join(' | ')+'</td></tr>'
-      +'<tr><td>&#x26A1; Dynamics</td><td>Thr '+params.compThr.toFixed(1)+'dB  Ratio '+params.compRat.toFixed(1)+':1  Atk '+params.compAtk.toFixed(1)+'ms</td></tr>'
-      +'<tr><td>&#x1F507; HPF / Saturation</td><td>HPF '+Math.round(params.hpfFreq)+'Hz (Q '+params.hpfQ.toFixed(2)+') &middot; Sat '+Math.round(params.sat)+'%</td></tr>'
-      +'<tr><td>&#x1F4D0; M/S</td><td>Mid '+params.midGain.toFixed(1)+'dB &middot; Side '+params.sideGain.toFixed(1)+'dB</td></tr>'
-      +'<tr><td>&#x1F39A;&#xFE0F; Output</td><td>Limiter '+params.lim.toFixed(1)+'dB &middot; Out Gain '+params.outGain.toFixed(1)+'dB</td></tr>'
-      +'<tr><td>&#x1F9E0; Metrics</td><td>Crest '+analysis.crest.toFixed(1)+'dB (target 10) &middot; Stereo width '+(analysis.stereoWidth*100).toFixed(0)+'% &middot; Flatness '+analysis.flatness.toFixed(3)+'</td></tr>'
-      +'</table>';
-    document.getElementById('analysisReport').innerHTML = html;
-    reportPanel.style.display=''; outputSection.style.display=''; fxRack.style.display=''; exportRow.style.display='';
-    drawWave(waveOut, trackPeaks, 0, '#00ffa3','#003320');
-    if(trackSpec) drawSpecFromData(specOut, trackSpec, '#00ffa3', 'rgba(0,255,163,.1)');
-    seekOut.disabled=false;
-    sysMsg.textContent='CORRECTION READY \u2714'; sysLed.className='s-led ok';
-    autoBtn.disabled=false;
-  }, 50);
-}
-
-// ======== AUDIO LOADING ========
-function loadAudio(file){
-  initCtx();
-  let reader=new FileReader();
-  reader.onload=function(e){
-    audioCtx.decodeAudioData(e.target.result, function(buf){
-      originalBuffer=buf;
-      currentTrackName=file.name.replace(/\.[^/.]+$/,'');
-      trackPeaks=computePeaks(buf, waveCanvas.offsetWidth||800);
-      drawWave(waveCanvas, trackPeaks, 0, '#ffaa00','#2a1800');
-      dropTrack.classList.add('loaded');
-      trackInfo.textContent=file.name+'  |  '+buf.duration.toFixed(1)+'s  |  '+(buf.sampleRate/1000)+'kHz  |  '+buf.numberOfChannels+'ch';
-      ledTrack.className='led loaded';
-      seekTrack.disabled=false; seekTrack.value=0;
-      seekTrackCurEl.textContent=fmtTime(0); seekTrackDurEl.textContent=fmtTime(buf.duration);
-      seekOutDurEl.textContent=fmtTime(buf.duration);
-      // Compute spectrum for spectrogram display
-      setTimeout(function(){
-        let sr=buf.sampleRate, FR=2048, mag=new Float32Array(FR>>1);
-        let mono=new Float32Array(Math.min(buf.length, sr*10));
-        for(let ch=0;ch<buf.numberOfChannels;ch++){
-          let d=buf.getChannelData(ch);
-          for(let i=0;i<mono.length;i++) mono[i]+=d[i]/buf.numberOfChannels;
-        }
-        let w=0;
-        for(let off=0;off+FR<=mono.length;off+=FR){
-          let re=new Float32Array(FR), im=new Float32Array(FR);
-          for(let i=0;i<FR;i++) re[i]=mono[off+i]*(0.5-0.5*Math.cos(2*Math.PI*i/FR));
-          // Cooley-Tukey FFT
-          for(let len=2;len<=FR;len<<=1){
-            let halfLen=len>>1, ang=-2*Math.PI/len;
-            for(let i=0;i<FR;i+=len){
-              for(let j=0;j<halfLen;j++){
-                let cos=Math.cos(ang*j), sin=Math.sin(ang*j);
-                let tr=cos*re[i+j+halfLen]-sin*im[i+j+halfLen];
-                let ti=sin*re[i+j+halfLen]+cos*im[i+j+halfLen];
-                re[i+j+halfLen]=re[i+j]-tr; im[i+j+halfLen]=im[i+j]-ti;
-                re[i+j]+=tr; im[i+j]+=ti;
-              }
-            }
-          }
-          for(let i=0;i<FR>>1;i++) mag[i]+=Math.hypot(re[i],im[i]);
-          w++;
-        }
-        for(let i=0;i<mag.length;i++) mag[i]/=w;
-        trackSpec={mag:mag, sr:sr, binHz:sr/FR};
-        drawSpecFromData(specCanvas, trackSpec, '#ffaa00','rgba(255,170,0,.15)');
-      }, 50);
-      sysMsg.textContent='READY'; sysLed.className='s-led';
-    }, function(){ sysMsg.textContent='DECODE ERROR'; });
-  };
-  reader.readAsArrayBuffer(file);
-}
-
-// ======== DROP ZONE ========
-function setupDrop(){
-  fileTrack.style.display='none';
-  dropTrack.addEventListener('click', function(){
-    if(!dropTrack.classList.contains('loaded')) fileTrack.click();
-  });
-  dropTrack.addEventListener('dragover', function(e){
-    e.preventDefault();
-    if(!dropTrack.classList.contains('loaded')) dropTrack.classList.add('drag-over');
-  });
-  dropTrack.addEventListener('dragleave', function(){
-    dropTrack.classList.remove('drag-over');
-  });
-  dropTrack.addEventListener('drop', function(e){
-    e.preventDefault();
-    dropTrack.classList.remove('drag-over');
-    if(dropTrack.classList.contains('loaded')) return;
-    let f=e.dataTransfer.files[0];
-    if(f) loadAudio(f);
-  });
-  fileTrack.addEventListener('change', function(){
-    if(fileTrack.files[0]) loadAudio(fileTrack.files[0]);
-  });
-}
-setupDrop();
-document.getElementById('loadTrackBtn').addEventListener('click', function(){ fileTrack.click(); });
-
-// ======== TRANSPORT - TRACK PLAYER ========
-// FIX: Generation counter pattern. Every time we create a new BufferSource,
-// we increment trackGeneration. The onended closure captures its own gen value
-// and only acts if it still matches the current counter. This prevents a stale
-// onended (from a seek-replaced source) from resetting playback state.
-function makeTrackSource(offset){
-  trackGeneration++;
-  let myGen = trackGeneration;
-  let src = audioCtx.createBufferSource();
-  src.buffer = originalBuffer;
-  src.loop = trackPlayer.looping;
-  src.connect(audioCtx.destination);
-  let off = Math.min(offset||0, originalBuffer.duration - 0.05);
-  src.start(0, off);
-  trackPlayer.src = src;
-  trackPlayer.startTime = audioCtx.currentTime - off;
-  trackPlayer.playing = true;
-  playTrackBtn.textContent = '\u23F8 PAUSE';
-  ledTrack.className = 'led playing';
-  rafTrack();
-  src.onended = function(){
-    // Guard: ignore if another source has since been created, or if looping
-    if(trackGeneration !== myGen) return;
-    if(trackPlayer.looping) return;
-    trackPlayer.playing = false;
-    trackPlayer.offset = 0;
-    if(rafTrackId){ cancelAnimationFrame(rafTrackId); rafTrackId=null; }
-    seekTrack.value = 0;
-    seekTrackCurEl.textContent = fmtTime(0);
-    playTrackBtn.textContent = '\u25B6 PLAY';
-    ledTrack.className = 'led loaded';
-    if(trackPeaks) drawWave(waveCanvas, trackPeaks, 0, '#ffaa00','#2a1800');
-  };
-}
-
-playTrackBtn.onclick = function(){
-  if(!originalBuffer){ fileTrack.click(); return; }
-  initCtx();
-  if(trackPlayer.playing){
-    // PAUSE: capture current position, stop source, cancel RAF
-    trackGeneration++;
-    let rawPos = audioCtx.currentTime - trackPlayer.startTime;
-    if(trackPlayer.looping){
-      let dur = originalBuffer.duration;
-      trackPlayer.offset = ((rawPos % dur) + dur) % dur;
-    } else {
-      trackPlayer.offset = Math.min(Math.max(0, rawPos), originalBuffer.duration);
-    }
-    if(trackPlayer.src) try{ trackPlayer.src.stop(); }catch(e){}
-    trackPlayer.src = null;
-    trackPlayer.playing = false;
-    if(rafTrackId){ cancelAnimationFrame(rafTrackId); rafTrackId=null; }
-    playTrackBtn.textContent = '\u25B6 PLAY';
-    ledTrack.className = 'led loaded';
-  } else {
-    // PLAY
-    makeTrackSource(trackPlayer.offset);
-  }
-};
-
-// FIX: stopTrackBtn now also cancels RAF
-stopTrackBtn.onclick = function(){
-  trackGeneration++;
-  if(trackPlayer.src) try{ trackPlayer.src.stop(); }catch(e){}
-  trackPlayer.src = null;
-  trackPlayer.playing = false;
-  trackPlayer.offset = 0;
-  if(rafTrackId){ cancelAnimationFrame(rafTrackId); rafTrackId=null; }
-  seekTrack.value = 0;
-  seekTrackCurEl.textContent = fmtTime(0);
-  playTrackBtn.textContent = '\u25B6 PLAY';
-  ledTrack.className = trackPeaks ? 'led loaded' : 'led';
-  if(trackPeaks) drawWave(waveCanvas, trackPeaks, 0, '#ffaa00','#2a1800');
-};
-
-// FIX: loop button - was not implemented at all
-loopTrackBtn.onclick = function(){
-  trackPlayer.looping = !trackPlayer.looping;
-  if(trackPlayer.looping){
-    loopTrackBtn.classList.add('btn-loop-active');
-    // If already playing, enable loop on current source
-    if(trackPlayer.src) trackPlayer.src.loop = true;
-  } else {
-    loopTrackBtn.classList.remove('btn-loop-active');
-    if(trackPlayer.src) trackPlayer.src.loop = false;
-  }
-};
-
-playOutBtn.onclick = function(){
-  if(!liveNodes.active) buildLiveChain();
-  if(livePlaying){
-    liveOffset = Math.max(0, audioCtx.currentTime - liveStart);
-    stopLive();  } else {
-    startLive(liveOffset);
-  }
-};
-stopOutBtn.onclick = function(){
-  stopLive();
-  liveOffset = 0;
-  seekOut.value = 0;
-  seekOutCurEl.textContent = fmtTime(0);
-  if(trackPeaks) drawWave(waveOut, trackPeaks, 0, '#00ffa3','#003320');
-};
-
-// ======== EXPORT ========
-exportBtn.onclick = async function(){
-  if(!originalBuffer) return;
-  sysMsg.textContent='RENDERING ...'; exportBtn.disabled=true;
-  // Pre-roll: render 0.5s of silence before the actual audio so the
-  // DynamicsCompressor's internal envelope has time to settle. Without this,
-  // Chrome's Web Audio compressor starts with a pre-charged gain-reduction
-  // envelope and releases it over the first ~release_time ms — audible as a
-  // brief fade-in at the top of the exported file, which destroys hard-hitting
-  // intros. After rendering we trim these samples from the WAV.
-  var preRollSec = 0.5;
-  var sr = originalBuffer.sampleRate;
-  var preRollSamples = Math.ceil(preRollSec * sr);
-  var totalSamples = originalBuffer.length + preRollSamples;
-  let oc=new OfflineAudioContext(originalBuffer.numberOfChannels, totalSamples, sr);
-  let src=oc.createBufferSource(); src.buffer=originalBuffer;
-  let hpf=oc.createBiquadFilter(); hpf.type='highpass';
-  hpf.frequency.value=recommendedParams.hpfFreq; hpf.Q.value=recommendedParams.hpfQ;
-  let eqs=EQ_FREQS.map(function(f,i){
-    let n=oc.createBiquadFilter(); n.type='peaking'; n.frequency.value=f;
-    n.Q.value=EQ_QS[i]; n.gain.value=recommendedParams.eq[i]; return n;
-  });
-  for(let i=0;i<6;i++) eqs[i].connect(eqs[i+1]);
-  let shaper=oc.createWaveShaper();
-  let amt=recommendedParams.sat/100, k=amt*80, sz=512, curve=new Float32Array(sz);
-  for(let i=0;i<sz;i++){
-    let x=(i*2)/sz-1;
-    curve[i]=k<0.5?x:(1+k/100)*x/(1+(k/100)*Math.abs(x));
-  }
-  let maxV=0; for(let v of curve) maxV=Math.max(maxV,Math.abs(v));
-  if(maxV>0) for(let i=0;i<sz;i++) curve[i]/=maxV;
-  shaper.curve=curve;
-  let comp=oc.createDynamicsCompressor();
-  comp.threshold.value=recommendedParams.compThr; comp.ratio.value=recommendedParams.compRat;
-  comp.attack.value=recommendedParams.compAtk/1000; comp.release.value=recommendedParams.compRel/1000;
-  let mkp=oc.createGain(); mkp.gain.value=Math.pow(10,recommendedParams.makeUp/20);
-  let lim=oc.createDynamicsCompressor(); lim.threshold.value=recommendedParams.lim;
-  lim.ratio.value=20; lim.attack.value=0.001;
-  let outG=oc.createGain(); outG.gain.value=Math.pow(10,recommendedParams.outGain/20);
-  hpf.connect(eqs[0]); eqs[6].connect(shaper); shaper.connect(comp); comp.connect(mkp);
-  // M/S processing — identical to the live chain so export and browser sound the same
-  if(originalBuffer.numberOfChannels===2){
-    let spl=oc.createChannelSplitter(2), mrg=oc.createChannelMerger(2);
-    let midG=oc.createGain(), sideG=oc.createGain();
-    let inv=oc.createGain(); inv.gain.value=-1;
-    let lM=oc.createGain(), rM=oc.createGain();
-    let sI=oc.createGain(); sI.gain.value=-1;
-    let mLin=Math.pow(10,recommendedParams.midGain/20);
-    let sLin=Math.pow(10,recommendedParams.sideGain/20);
-    midG.gain.value=0.5*mLin; sideG.gain.value=0.5*sLin;
-    mkp.connect(spl);
-    spl.connect(midG,0); spl.connect(midG,1);
-    spl.connect(sideG,0); spl.connect(inv,1); inv.connect(sideG);
-    midG.connect(lM); sideG.connect(lM);
-    midG.connect(rM); sideG.connect(sI); sI.connect(rM);
-    lM.connect(mrg,0,0); rM.connect(mrg,0,1); mrg.connect(lim);
-  } else {
-    mkp.connect(lim);
-  }
-  lim.connect(outG); outG.connect(oc.destination);
-  // Start source after the pre-roll period so the compressor warms up on silence
-  src.connect(hpf); src.start(preRollSec);
-  let rendered=await oc.startRendering();
-  // Trim the pre-roll: copy only samples [preRollSamples .. end] into the WAV
-  var numChR=rendered.numberOfChannels, trimLen=rendered.length-preRollSamples;
-  var trimmed=audioCtx.createBuffer(numChR, trimLen, sr);
-  for(var ch=0;ch<numChR;ch++){
-    trimmed.getChannelData(ch).set(rendered.getChannelData(ch).subarray(preRollSamples));
-  }
-  let blob=(function(wav){
-    let numCh=wav.numberOfChannels, sr=wav.sampleRate, len=wav.length, bytes=len*numCh*2;
-    let buffer=new ArrayBuffer(44+bytes), view=new DataView(buffer);
-    let ws=function(o,s){ [...s].forEach(function(c,i){ view.setUint8(o+i,c.charCodeAt(0)); }); };
-    ws(0,'RIFF'); view.setUint32(4,36+bytes,true); ws(8,'WAVE'); ws(12,'fmt ');
-    view.setUint32(16,16,true); view.setUint16(20,1,true); view.setUint16(22,numCh,true);
-    view.setUint32(24,sr,true); view.setUint32(28,sr*numCh*2,true);
-    view.setUint16(32,numCh*2,true); view.setUint16(34,16,true); ws(36,'data');
-    view.setUint32(40,bytes,true);
-    let off=44;
-    for(let i=0;i<len;i++) for(let ch=0;ch<numCh;ch++){
-      let s=Math.max(-1,Math.min(1,wav.getChannelData(ch)[i]));
-      view.setInt16(off,s<0?s*0x8000:s*0x7FFF,true); off+=2;
-    }
-    return new Blob([buffer],{type:'audio/wav'});
-  })(trimmed);
-  let url=URL.createObjectURL(blob);
-  let defaultName=(currentTrackName||'rack4master')+'_autoprocessed';
-  let chosenName=window.prompt('Nombre del archivo a descargar:', defaultName);
-  if(chosenName===null){ URL.revokeObjectURL(url); exportBtn.disabled=false; sysMsg.textContent='EXPORT CANCELLED'; return; }
-  if(!chosenName.trim()) chosenName=defaultName;
-  chosenName=chosenName.trim().replace(/\.wav$/i,'');
-  let a=document.createElement('a'); a.href=url; a.download=chosenName+'.wav';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-  sysMsg.textContent='EXPORT OK'; exportBtn.disabled=false;
-};
-
-// ======== SLIDER EVENT BINDING ========
-const allSliders = document.querySelectorAll('input[type=range]');
-allSliders.forEach(function(slider){
-  slider.addEventListener('input', function(){
-    let id=this.id;
-    if(id.startsWith('eq')){
-      let idx=['eq50','eq100','eq300','eq1k','eq3k','eq8k','eq16k'].indexOf(id);
-      if(idx>=0) recommendedParams.eq[idx]=parseFloat(this.value);
-    } else if(id==='compThr')  recommendedParams.compThr=parseFloat(this.value);
-    else if(id==='compRat')    recommendedParams.compRat=parseFloat(this.value);
-    else if(id==='compAtk')    recommendedParams.compAtk=parseFloat(this.value);
-    else if(id==='compRel')    recommendedParams.compRel=parseFloat(this.value);
-    else if(id==='compMkp')    recommendedParams.makeUp=parseFloat(this.value);
-    else if(id==='satAmt')     recommendedParams.sat=parseFloat(this.value);
-    else if(id==='hpfFreq')    recommendedParams.hpfFreq=parseFloat(this.value);
-    else if(id==='hpfQ')       recommendedParams.hpfQ=parseFloat(this.value);
-    else if(id==='midGain')    recommendedParams.midGain=parseFloat(this.value);
-    else if(id==='sideGain')   recommendedParams.sideGain=parseFloat(this.value);
-    else if(id==='limCeil')    recommendedParams.lim=parseFloat(this.value);
-    else if(id==='outGain')    recommendedParams.outGain=parseFloat(this.value);
-    // update displayed value
-    let span=document.getElementById(id+'v')||document.getElementById(id+'V');
-    if(span){
-      let val=parseFloat(this.value);
-      if(id.includes('eq'))            span.textContent=(val>=0?'+':'')+val.toFixed(1)+' dB';
-      else if(id==='compThr')          span.textContent=val.toFixed(1)+' dB';
-      else if(id==='compRat')          span.textContent=val.toFixed(1)+':1';
-      else if(id==='compAtk')          span.textContent=val.toFixed(1)+' ms';
-      else if(id==='compRel')          span.textContent=Math.round(val)+' ms';
-      else if(id==='compMkp')          span.textContent=(val>=0?'+':'')+val.toFixed(1)+' dB';
-      else if(id==='satAmt')           span.textContent=Math.round(val)+'%';
-      else if(id==='hpfFreq')          span.textContent=Math.round(val)+' Hz';
-      else if(id==='hpfQ')             span.textContent=val.toFixed(1)+' Q';
-      else if(id==='midGain'||id==='sideGain'||id==='outGain')
-                                       span.textContent=(val>=0?'+':'')+val.toFixed(1)+' dB';
-      else if(id==='limCeil')          span.textContent=val.toFixed(1)+' dB';
-    }
-    if(liveNodes.active) updateLiveParams();
-  });
-});
-// Initial display update
-allSliders.forEach(function(s){ s.dispatchEvent(new Event('input')); });
-
-autoBtn.onclick = autoCorrect;
-
-// ======== HELPERS ========
-function fmtTime(s){ s=Math.max(0,s||0); let m=Math.floor(s/60); return m+':'+(Math.floor(s%60)+'').padStart(2,'0'); }
-
-// ======== SEEK BARS ========
-const seekTrack = document.getElementById('seekTrack');
-const seekOut = document.getElementById('seekOut');
-const seekTrackCurEl = document.getElementById('seekTrackCur');
-const seekTrackDurEl = document.getElementById('seekTrackDur');
-const seekOutCurEl = document.getElementById('seekOutCur');
-const seekOutDurEl = document.getElementById('seekOutDur');
-
-// FIX: RAF loop with loop-aware position and correct cancel-on-stop
-let rafTrackId = null;
-function rafTrack(){
-  if(rafTrackId){ cancelAnimationFrame(rafTrackId); rafTrackId=null; }
-  function loop(){
-    if(!trackPlayer.playing){ rafTrackId=null; return; }
-    let dur = originalBuffer ? originalBuffer.duration : 1;
-    let raw = audioCtx.currentTime - trackPlayer.startTime;
-    let pos;
-    if(trackPlayer.looping){
-      // Wrap position for loop display
-      pos = ((raw % dur) + dur) % dur;
-    } else {
-      pos = Math.min(raw, dur);
-    }
-    seekTrack.value = Math.round((pos/dur)*10000);
-    seekTrackCurEl.textContent = fmtTime(pos);
-    drawWave(waveCanvas, trackPeaks, pos/dur, '#ffaa00','#2a1800');
-    rafTrackId = requestAnimationFrame(loop);
-  }
-  rafTrackId = requestAnimationFrame(loop);
-}
-
-// FIX: Seek on track - uses generation counter to replace the source cleanly
-seekTrack.addEventListener('input', function(){
-  if(!originalBuffer) return;
-  let dur = originalBuffer.duration;
-  let pos = (this.value/10000) * dur;
-  seekTrackCurEl.textContent = fmtTime(pos);
-  drawWave(waveCanvas, trackPeaks, pos/dur, '#ffaa00','#2a1800');
-  trackPlayer.offset = pos;
-  if(trackPlayer.playing){
-    // Stop old source (its onended will be ignored due to new trackGeneration)
-    if(trackPlayer.src) try{ trackPlayer.src.stop(); }catch(e){}
-    if(rafTrackId){ cancelAnimationFrame(rafTrackId); rafTrackId=null; }
-    makeTrackSource(pos);
-  }
-});
-
-// Click waveform canvas to seek
-waveCanvas.style.cursor='pointer';
-waveCanvas.addEventListener('click', function(e){
-  if(!originalBuffer) return;
-  let pos = (e.offsetX/this.offsetWidth) * originalBuffer.duration;
-  seekTrack.value = Math.round((pos/originalBuffer.duration)*10000);
-  seekTrack.dispatchEvent(new Event('input'));
-});
-
-// Seek output track
-seekOut.addEventListener('input', function(){
-  if(!originalBuffer) return;
-  let dur = originalBuffer.duration;
-  let pos = (this.value/10000) * dur;
-  seekOutCurEl.textContent = fmtTime(pos);
-  if(trackPeaks) drawWave(waveOut, trackPeaks, pos/dur, '#00ffa3','#003320');
-  liveOffset = pos;
-  if(livePlaying){ stopLive(); startLive(liveOffset); }
-});
-
-// Click output waveform to seek
-waveOut.style.cursor='pointer';
-waveOut.addEventListener('click', function(e){
-  if(!originalBuffer) return;
-  let pos = (e.offsetX/this.offsetWidth) * originalBuffer.duration;
-  seekOut.value = Math.round((pos/originalBuffer.duration)*10000);
-  seekOut.dispatchEvent(new Event('input'));
-});
-
-// ======== PRESETS ========
-function applyPreset(p){
-  recommendedParams = Object.assign({}, recommendedParams, p);
-  if(p.eq) recommendedParams.eq=[...p.eq];
-  const eqIds=['eq50','eq100','eq300','eq1k','eq3k','eq8k','eq16k'];
-  eqIds.forEach(function(id,i){ let el=document.getElementById(id); if(el&&recommendedParams.eq[i]!==undefined) el.value=recommendedParams.eq[i]; });
-  const map={compThr:'compThr',compRat:'compRat',compAtk:'compAtk',compRel:'compRel',makeUp:'compMkp',sat:'satAmt',hpfFreq:'hpfFreq',hpfQ:'hpfQ',midGain:'midGain',sideGain:'sideGain',lim:'limCeil',outGain:'outGain'};
-  Object.entries(map).forEach(function(kv){ let el=document.getElementById(kv[1]); if(el&&recommendedParams[kv[0]]!==undefined) el.value=recommendedParams[kv[0]]; });
-  document.querySelectorAll('input[type=range]').forEach(function(s){ s.dispatchEvent(new Event('input')); });
-  if(liveNodes.active) updateLiveParams();
-  sysMsg.textContent='PRESET LOADED \u2714'; sysLed.className='s-led ok';
-}
-
-document.getElementById('savePresetBtn').onclick = function(){
-  let defaultName = currentTrackName || 'RACK4MASTER Preset';
-  let presetName = window.prompt('Nombre del preset:', defaultName);
-  if(presetName === null) return; // user cancelled
-  if(!presetName.trim()) presetName = defaultName;
-  let preset={ name:presetName.trim(), date:new Date().toISOString(), params:Object.assign({},recommendedParams,{eq:[...recommendedParams.eq]}) };
-  let blob=new Blob([JSON.stringify(preset,null,2)],{type:'application/json'});
-  let url=URL.createObjectURL(blob), a=document.createElement('a');
-  let safeFileName=presetName.trim().replace(/[\\/:*?"<>|]/g,'_');
-  a.href=url; a.download=safeFileName+'.json'; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-  sysMsg.textContent='PRESET SAVED \u2714';
-};
-
-const presetFileInput=document.getElementById('presetFileInput');
-document.getElementById('loadPresetBtn').onclick = function(){ presetFileInput.click(); };
-presetFileInput.addEventListener('change', function(){
-  let file=presetFileInput.files[0]; if(!file) return;
-  let reader=new FileReader();
-  reader.onload=function(e){
-    try{
-      let data=JSON.parse(e.target.result);
-      let p=data.params||data;
-      applyPreset(p);
-    }catch(err){ sysMsg.textContent='PRESET ERROR'; }
-  };
-  reader.readAsText(file); presetFileInput.value='';
-});
-
-const resetModal=document.getElementById('resetModal');
-resetBtn.onclick=function(){ resetModal.classList.remove('hidden'); };
-document.getElementById('resetConfirm').onclick=function(){ location.reload(); };
-document.getElementById('resetCancel').onclick=function(){ resetModal.classList.add('hidden'); };
-resetModal.onclick=function(e){ if(e.target===resetModal) resetModal.classList.add('hidden'); };
-</script>
+<!-- ===== SCRIPTS ===== -->
+<script src="https://unpkg.com/meyda@5.6.0/dist/web/meyda.min.js"></script>
+<script src="i18n.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
