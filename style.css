@@ -286,6 +286,10 @@ header {
 .btn-dl:hover { background: var(--blue); color: #000; }
 .btn-preset { border-color: #9966ff; color: #9966ff; }
 .btn-preset:hover { background: #9966ff; color: #000; }
+.btn-gray { border-color: var(--border2); color: var(--dim); }
+.btn-gray:hover { border-color: var(--dim); color: var(--text); }
+.btn-red { border-color: var(--red); color: var(--red); }
+.btn-red:hover { background: var(--red); color: #000; }
 .btn:disabled { opacity: .3; cursor: not-allowed; }
 .btn-loop-active {
   border-color: var(--green) !important;
@@ -412,9 +416,6 @@ header {
 .atbl th { background: #0a0b12; color: var(--amber); padding: 7px 10px; text-align: left; font-family: var(--sans); border-bottom: 1px solid var(--border2); }
 .atbl td { padding: 6px 10px; border-bottom: 1px solid var(--border); font-family: var(--mono); }
 .atbl .cat-row td { background: var(--panel2); color: var(--dim); font-family: var(--sans); letter-spacing: .2em; padding: 5px 10px; }
-.vp { color: var(--green); font-weight: 600; }
-.vn { color: var(--red); }
-.vu { color: var(--dim); }
 
 /* ---- Modal ---- */
 .modal-overlay {
